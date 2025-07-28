@@ -1,0 +1,18 @@
+[Unit]
+Description=Wayfinding Flask web app with Gunicorn
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/wayfinding
+Environment="PATH=/var/www/wayfinding/.venv/bin"
+ExecStart=/var/www/wayfinding/.venv/bin/gunicorn wsgi:app --bind 127.0.0.1:8000 --workers 1 --timeout 120
+
+Restart=always
+RestartSec=3
+KillSignal=SIGQUIT
+TimeoutStopSec=60
+
+[Install]
+WantedBy=multi-user.target

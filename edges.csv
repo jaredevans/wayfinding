@@ -1,0 +1,182 @@
+from,to,distance
+c001,c002,32.5
+Gate House,c002,20.5
+c002,c003,18.3
+c003,c004,61.0
+Edward Miner Gallaudet Residence,c004,33.8
+c004,c005,42.1
+c005,c006,28.5
+c006,c007,29.5
+c008,c064,78.9
+c064,Entrance Sixth Street,23.7
+Ballard House,c005,16.4
+Fay House,c006,14.9
+Denison House,c007,12.6
+c007,c009,12.9
+c009,c008,33.2
+c009,c010,30.2
+c010,c011,22.6
+c011,c012,44.0
+Appleby Building,c012,75.4
+c008,c013,89.0
+c003,c013,131.6
+c014,c015,30.4
+c015,c013,44.8
+c015,c016,36.5
+Edward Miner Gallaudet Memorial Building,c016,22.0
+c013,c017,26.3
+Peikoff Alumni House,c017,20.1
+c017,c016,30.4
+c014,College Hall,18.7
+c019,College Hall,24.9
+c015,c019,17.4
+College Hall,c025,25.0
+c025,c000,36.4
+c025,c024,40.9
+c023,c024,36.3
+Kendall Hall,c024,24.7
+c024,c029,28.0
+c030,c029,29.3
+Foster Auditorium,c030,16.6
+Ely Center,c029,20.1
+Building 103,c031,16.7
+c031,c023,18.8
+c023,Fowler Hall,20.0
+Alice Cogswell Statue,c032,36.7
+c032,c001,16.3
+c032,c033,34.9
+c033,College Hall,29.4
+c001,c034,39.0
+c034,c014,23.1
+c034,c033,13.9
+Entrance Walking Gate,c035,17.0
+Gate House,c035,9.7
+c035,c002,24.9
+c035,c003,29.3
+c019,c028,27.8
+c025,c028,23.7
+c028,c026,36.8
+c026,c027,29.6
+c027,Statue Edward Miner Gallaudet,14.7
+c030,c022,31.9
+c030,c027,29.0
+c027,c022,46.0
+c022,c021,62.5
+c021,c026,23.5
+c021,c020,25.6
+c020,c018,37.0
+c017,c018,16.7
+c018,Shuttle Stop Kellogg,15.1
+Shuttle Stop Kellogg,c036,30.4
+c036,Kellogg Conference Hotel,45.5
+Peet Hall,c036,37.8
+c020,c038,28.9
+c038,Peet Hall,15.3
+c038,c039,15.0
+c039,c021,36.7
+c039,c040,62.4
+c041,c040,38.1
+c042,c041,24.9
+c042,c043,26.2
+c043,Merrill Learning Center,30.0
+c040,Merrill Learning Center,29.2
+c050,c036,30.6
+c049,c050,37.6
+c037,c049,33.4
+Washburn Arts Building,c037,35.2
+Living and learning residence hall,c049,24.8
+c040,c047,22.6
+c047,c048,44.1
+c048,Hall Memorial Building,40.4
+c048,c044,48.9
+c045,c044,17.3
+c043,c044,28.9
+c046,c045,30.3
+c022,I. King Jordan Student Academic Center,59.0
+I. King Jordan Student Academic Center,c045,64.5
+c022,c051,58.6
+I. King Jordan Student Academic Center,c051,31.6
+c051,c043,28.2
+c022,c052,47.4
+c051,c052,39.2
+c052,c039,30.4
+c055,c031,33.8
+c055,c029,56.3
+c055,c053,36.8
+Elstad Auditorium,c053,35.1
+Elstad Theatre,c057,14.7
+c055,c061,31.0
+c061,c053,29.4
+c057,c061,39.3
+c054,c061,24.1
+c054,c056,22.7
+c056,Field House,37.8
+Field House,c060,24.0
+c022,c059,55.8
+Entrance Florida Ave,c062,50.3
+Entrance Florida Ave,c063,53.1
+c063,c062,32.0
+c062,Alice Cogswell Statue,45.3
+c063,c031,36.7
+c063,Fowler Hall,32.7
+c053,c063,62.7
+c062,Fowler Hall,26.2
+c046,Sorenson Language and Communication Center,25.9
+c037,c065,35.8
+c066,c065,38.1
+Hall Memorial Building,c066,19.0
+c037,c048,82.5
+c048,c046,61.6
+c070,c069,24.5
+I. King Jordan Student Academic Center,c070,56.7
+c069,Hotchkiss Field,53.1
+c045,c069,66.1
+c067,Hall Memorial Building,46.8
+c048,c074,37.8
+c067,c074,47.8
+c067,c073,34.2
+c068,c073,35.3
+Sorenson Language and Communication Center,c068,12.5
+c073,c071,19.2
+c071,c072,36.7
+c072,c069,86.4
+c065,c076,61.4
+c076,c075,28.2
+c075,c077,38.4
+c071,c077,46.1
+Benson Hall,c071,30.6
+c078,c076,52.5
+c078,Ballard West,20.7
+c077,c079,91.9
+c079,Plaza Dining Hall,32.8
+c072,c080,45.6
+c080,c081,33.8
+c081,c082,57.7
+c082,c083,68.1
+c086,c083,72.2
+c086,Central Receiving,7.7
+c085,Peter J. Fine Health Center,40.0
+c085,c084,68.7
+c079,c084,36.8
+c086,c087,33.8
+c088,c087,33.0
+c088,c089,51.7
+c090,c089,32.5
+c090,Central Utilities Building,27.5
+c082,DPS,19.7
+c084,Carlin Hall,31.7
+c082,Carlin Hall,38.1
+c081,Clerc Hall,41.0
+c081,Benson Hall,37.2
+c077,c087,142.3
+c078,c091,54.0
+c091,Ballard North,18.7
+c091,c079,71.5
+c020,Edward Miner Gallaudet Memorial Building,35.7
+c054,c092,44.0
+c092,c059,22.7
+c092,c060,25.1
+c092,c069,129.5
+c056,c092,35.9
+c047,Living and learning residence hall,29.4
+I. King Jordan Student Academic Center,c059,67.5
