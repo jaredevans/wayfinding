@@ -16,7 +16,7 @@ This is the main Flask web application. It serves the following functions:
     -   Delete existing edges by clicking on them.
 -   **API Endpoints:** Exposes several API endpoints to handle the dynamic adding and deleting of nodes and edges from the frontend.
 
-https://i.imgur.com/p4VaqLd.png
+<img src="https://i.imgur.com/p4VaqLd.png" width=500 height=800>
 
 ### `wayfinding.py`
 
