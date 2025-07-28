@@ -1,6 +1,6 @@
-# Gallaudet University Wayfinding
+# Campus Wayfinding
 
-This project provides a web-based wayfinding application for the Gallaudet University campus. It allows users to find the shortest walking route between two points of interest and includes an administrative interface for managing the underlying campus graph data.
+This project provides a web-based wayfinding application for a campus. It allows users to find the shortest walking route between two points of interest and includes an administrative interface for managing the underlying campus graph data.
 
 ## Python Scripts
 
