@@ -1,56 +1,69 @@
-#!/Users/jared.evans/python_projs/wayfinding/.venv/bin/python3
+#!/usr/bin/env python3
+import os
+import re
 import pandas as pd
 import networkx as nx
+import folium
 
-# --- Load data from CSV files ---
-nodes_df = pd.read_csv("nodes.csv")
-edges_df = pd.read_csv("edges.csv")
+NODES_CSV = "nodes.csv"
+EDGES_CSV = "edges.csv"
 
-# --- Build the graph ---
-G = nx.Graph()
+def clean_nodes_df(df):
+    for col in df.select_dtypes(include="object"):
+        df[col] = df[col].str.strip()
+    df = df.dropna(subset=["label", "lat", "lon"])
+    df = df[~(df["lat"] == '') & ~(df["lon"] == '')]
+    return df
 
-# Add nodes (label, lat, lon, level)
-for _, row in nodes_df.iterrows():
-    G.add_node(
-        row["label"],
-        lat=row["lat"],
-        lon=row["lon"],
-        level=str(row["level"]).lower()
-    )
+def load_graph():
+    nodes_df = clean_nodes_df(pd.read_csv(NODES_CSV))
+    edges_df = pd.read_csv(EDGES_CSV)
+    G = nx.Graph()
+    for _, row in nodes_df.iterrows():
+        try:
+            lat = float(row["lat"])
+            lon = float(row["lon"])
+        except Exception:
+            continue
+        label = str(row["label"]).strip()
+        level = str(row.get("level", "ground")).strip().lower()
+        G.add_node(label, lat=lat, lon=lon, level=level)
+    for _, row in edges_df.iterrows():
+        f = str(row["from"]).strip()
+        t = str(row["to"]).strip()
+        try:
+            w = float(row["distance"])
+            G.add_edge(f, t, weight=w)
+        except Exception:
+            continue
+    return G
 
-# Add edges (from, to, distance)
-for _, row in edges_df.iterrows():
-    G.add_edge(
-        row["from"],
-        row["to"],
-        weight=float(row["distance"])
-    )
-
-def find_route(start_label, end_label):
+def shortest_path_via_cxx(G, start, end):
+    def is_cxx(n):
+        return bool(re.fullmatch(r"c\d{2,3}", n))
+    allowed = {start, end}
+    allowed.update([n for n in G.nodes if is_cxx(n)])
+    H = G.subgraph(allowed)
     try:
-        path = nx.dijkstra_path(G, start_label, end_label, weight="weight")
+        nodes = nx.dijkstra_path(H, start, end, weight="weight")
     except nx.NetworkXNoPath:
-        print(f"No path found between {start_label} and {end_label}.")
-        return []
+        return None, [], 0.0
     steps = []
-    for i in range(len(path)-1):
-        a, b = path[i], path[i+1]
-        a_level = G.nodes[a]["level"]
-        b_level = G.nodes[b]["level"]
-        distance = G[a][b]["weight"]
-        desc = f"{a} ({a_level}) → {b} ({b_level})"
-        if a_level != b_level:
-            desc += "   [USE STAIR OR RAMP]"
-        steps.append((desc, distance))
-    return steps
+    total = 0.0
+    for a, b in zip(nodes[:-1], nodes[1:]):
+        d = G[a][b]["weight"]
+        total += d
+        steps.append((f"{a} → {b} ({d:.1f} m)", d))
+    return nodes, steps, total
 
-# --- Show numbered list of nodes ---
-node_labels = list(G.nodes)
+# --- Load graph ---
+G = load_graph()
+node_labels = sorted([n for n in G.nodes if not re.fullmatch(r"c\d{2,3}", n)])
+
 print("Available locations:")
 for i, label in enumerate(node_labels, 1):
     print(f" {i}: {label}")
 
-# --- Get user selection by number ---
 def get_node_by_number(prompt):
     while True:
         try:
@@ -64,78 +77,54 @@ def get_node_by_number(prompt):
 
 start = get_node_by_number("\nEnter the number for the START location: ")
 end = get_node_by_number("Enter the number for the END location: ")
+if start == end:
+    print("Start and end must be different.")
+    exit(1)
 
-# --- Find and display the route ---
-route = find_route(start, end)
+path_nodes, segments, total = shortest_path_via_cxx(G, start, end)
 
 print(f"\nRoute from {start} to {end}:")
-total_distance = 0
-if not route:
-    print("No route found.")
+if not path_nodes:
+    print("No route found (must traverse via cXX or cXXX nodes).")
 else:
-    for step, distance in route:
-        print(f" - {step}  [{distance:.1f} units]")
-        total_distance += distance
-    print(f"\nTotal distance: {total_distance:.1f} units")
+    for desc, dist in segments:
+        print(f" - {desc}")
+    print(f"\nTotal distance: {total:.1f} m")
 
 # ----------- Generate Map -----------
-import folium
-
-if route:
-    # Get a list of node labels in the path, in order
-    path_labels = [start]
-    for step, _ in route:
-        # step is in the format "A (...) → B (...)", extract B
-        to_label = step.split("→")[1].split("(")[0].strip()
-        path_labels.append(to_label)
-
-    # Calculate map center
-    lats = [G.nodes[label]["lat"] for label in G.nodes]
-    lons = [G.nodes[label]["lon"] for label in G.nodes]
+if path_nodes:
+    lats = [G.nodes[n]["lat"] for n in G.nodes if "lat" in G.nodes[n]]
+    lons = [G.nodes[n]["lon"] for n in G.nodes if "lon" in G.nodes[n]]
     map_center = [sum(lats)/len(lats), sum(lons)/len(lons)]
-
     m = folium.Map(location=map_center, zoom_start=17)
 
-    # Add all nodes as markers
-    for label in G.nodes:
-        lat = G.nodes[label]["lat"]
-        lon = G.nodes[label]["lon"]
+    # Show all nodes, highlight only those in the path
+    for n in G.nodes:
+        attrs = G.nodes[n]
+        color = "red" if n in path_nodes else "blue"
         folium.CircleMarker(
-            location=[lat, lon],
-            radius=5,
-            popup=label,
-            color="blue" if label not in path_labels else "red",
-            fill=True,
-            fill_color="blue" if label not in path_labels else "red",
-            fill_opacity=0.8,
+            location=[attrs["lat"], attrs["lon"]],
+            radius=4,
+            popup=n,
+            color=color,
+            fill=True, fill_opacity=0.9,
         ).add_to(m)
-
-    # Add all edges in gray
+    # Draw all edges in gray
     for u, v in G.edges:
-        lat1, lon1 = G.nodes[u]["lat"], G.nodes[u]["lon"]
-        lat2, lon2 = G.nodes[v]["lat"], G.nodes[v]["lon"]
+        if "lat" in G.nodes[u] and "lat" in G.nodes[v]:
+            folium.PolyLine(
+                [(G.nodes[u]["lat"], G.nodes[u]["lon"]),
+                 (G.nodes[v]["lat"], G.nodes[v]["lon"])],
+                color="#5ec7f8", weight=2, opacity=0.5,
+            ).add_to(m)
+    # Highlight path in red
+    for u, v in zip(path_nodes[:-1], path_nodes[1:]):
         folium.PolyLine(
-            locations=[(lat1, lon1), (lat2, lon2)],
-            color="gray",
-            weight=2,
-            opacity=0.5,
+            [(G.nodes[u]["lat"], G.nodes[u]["lon"]),
+             (G.nodes[v]["lat"], G.nodes[v]["lon"])],
+            color="red", weight=5, opacity=0.9,
         ).add_to(m)
-
-    # Highlight the path in red
-    for i in range(len(path_labels)-1):
-        u, v = path_labels[i], path_labels[i+1]
-        lat1, lon1 = G.nodes[u]["lat"], G.nodes[u]["lon"]
-        lat2, lon2 = G.nodes[v]["lat"], G.nodes[v]["lon"]
-        folium.PolyLine(
-            locations=[(lat1, lon1), (lat2, lon2)],
-            color="red",
-            weight=6,
-            opacity=1,
-        ).add_to(m)
-
-    # Save the map
     m.save("map.html")
     print("\nInteractive map saved as map.html")
-
 else:
     print("\nNo map generated (no route found).")
