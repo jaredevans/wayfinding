@@ -6,15 +6,23 @@ This project provides a web-based wayfinding application for a campus. It allows
 
 ### `app.py`
 
-This is the main Flask web application. It serves the following functions:
+This is the main Flask web application that powers the interactive wayfinding service. It provides a user-friendly interface for route calculation and a comprehensive admin panel for graph management.
 
--   **Route Finding:** Provides a user interface where users can select a starting and ending location from a dropdown menu. It calculates the shortest path using a specialized algorithm that prioritizes connector nodes (labeled `cXX` or `cXXX`) for travel between major locations.
--   **Map Visualization:** Displays the calculated route on an interactive map powered by Folium and Leaflet.js.
--   **Admin Interface:** Includes a feature-rich admin page (`/wayfinding/add_node`) that allows for the management of the campus graph. Administrators can:
-    -   Add new nodes (points of interest) by clicking on the map.
-    -   Add new edges (paths) by clicking on two existing nodes.
-    -   Delete existing edges by clicking on them.
--   **API Endpoints:** Exposes several API endpoints to handle the dynamic adding and deleting of nodes and edges from the frontend.
+**User-Facing Features:**
+
+-   **Route Finding:**
+    -   Users can select a start and end location from dropdown menus populated with named points of interest.
+    -   Alternatively, users can use their device's GPS coordinates as the starting point. The application will find the nearest connector node to begin the route.
+-   **Specialized Routing Algorithm:** The core logic ensures that all routes between major locations are calculated via a network of connector nodes (e.g., `c001`, `c002`). This enforces realistic paths along primary walkways.
+-   **Interactive Map Visualization:** The calculated route is displayed on an interactive map (using Folium and Leaflet.js), with the path highlighted and markers for each node.
+
+**Administrative Features:**
+
+The application includes a powerful admin interface at the `/wayfinding/add_node` endpoint for real-time management of the campus map data.
+
+-   **Add Nodes:** Administrators can add new nodes (points of interest or connector nodes) to the graph simply by clicking on the desired location on the map. A popup allows them to assign a label before saving.
+-   **Add Edges:** New paths (edges) can be created by clicking on two existing nodes in sequence. The application automatically calculates the distance and prompts for confirmation before saving.
+-   **Delete Edges:** Existing edges can be selected and deleted with a single click, making it easy to correct or update pathways.
 
 <img src="https://i.imgur.com/p4VaqLd.png" width=500 height=800>
 
