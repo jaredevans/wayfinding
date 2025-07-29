@@ -24,7 +24,17 @@ The application includes a powerful admin interface at the `/wayfinding/add_node
 -   **Add Edges:** New paths (edges) can be created by clicking on two existing nodes in sequence. The application automatically calculates the distance and prompts for confirmation before saving.
 -   **Delete Edges:** Existing edges can be selected and deleted with a single click, making it easy to correct or update pathways.
 
+Sample route on campus:
+
 <img src="https://i.imgur.com/p4VaqLd.png" width=500 height=800>
+
+Mobile version, with GPS position set:
+
+<img src="https://i.imgur.com/JmZhbEC.jpeg" width=500 height=800>
+
+Mobile version, route from user's GPS position:
+
+<img src="https://i.imgur.com/sBBe2DZ.jpeg" width=500 height=800>
 
 ### `wayfinding.py`
 
