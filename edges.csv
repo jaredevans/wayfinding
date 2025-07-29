@@ -18,7 +18,6 @@ c009,c010,30.2
 c010,c011,22.6
 c011,c012,44.0
 Appleby Building,c012,75.4
-c008,c013,89.0
 c003,c013,131.6
 c014,c015,30.4
 c015,c013,44.8
@@ -66,8 +65,6 @@ c021,c026,23.5
 c021,c020,25.6
 c020,c018,37.0
 c017,c018,16.7
-c018,Shuttle Stop Kellogg,15.1
-Shuttle Stop Kellogg,c036,30.4
 c036,Kellogg Conference Hotel,45.5
 Peet Hall,c036,37.8
 c020,c038,28.9
@@ -114,7 +111,6 @@ c056,Field House,37.8
 Field House,c060,24.0
 c022,c059,55.8
 Entrance Florida Ave,c062,50.3
-Entrance Florida Ave,c063,53.1
 c063,c062,32.0
 c062,Alice Cogswell Statue,45.3
 c063,c031,36.7
@@ -180,3 +176,27 @@ c092,c069,129.5
 c056,c092,35.9
 c047,Living and learning residence hall,29.4
 I. King Jordan Student Academic Center,c059,67.5
+c093,Shuttle Stop Kellogg,7.7
+c093,c018,10.8
+c093,c036,35.0
+c064,Sixth Street Garage,36.2
+c008,Sixth Street Garage,70.4
+c008,c094,43.6
+c094,c013,47.0
+c094,Designated smoking area 1,24.3
+Designated smoking area 1,c018,48.6
+c076,Designated smoking area 2,34.9
+Designated smoking area 2,c078,25.5
+Security Kiosk,c063,16.3
+c062,Security Kiosk,20.3
+Entrance Florida Ave,c095,35.5
+c095,Security Kiosk,9.6
+c095,c063,17.6
+Entrance West Virginia Ave,c096,38.8
+c096,c097,84.6
+c097,c098,88.7
+c098,c083,17.7
+c080,c099,82.7
+c099,Softball Complex,25.2
+Hoy Field,c099,36.4
+c065,Rope Course,35.0
