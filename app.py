@@ -10,6 +10,7 @@ import pandas as pd
 import networkx as nx
 import folium
 import re
+import math
 from flask import (
     Flask, render_template_string, request, redirect, url_for, flash, jsonify
 )
@@ -49,12 +50,13 @@ def load_graph():
             continue
     return G, nodes_df
 
-def shortest_path_via_cxx(start: str, end: str):
+def shortest_path_via_cxx(start: str, end: str, graph=None):
+    g = graph if graph is not None else G
     def is_cxx(n):
         return bool(re.fullmatch(r"c\d{2,3}", n))
     allowed = {start, end}
-    allowed.update([n for n in G.nodes if is_cxx(n)])
-    H = G.subgraph(allowed)
+    allowed.update([n for n in g.nodes if is_cxx(n)])
+    H = g.subgraph(allowed)
     try:
         nodes = nx.dijkstra_path(H, start, end, weight="weight")
     except nx.NetworkXNoPath:
@@ -62,7 +64,7 @@ def shortest_path_via_cxx(start: str, end: str):
     steps = []
     total = 0.0
     for a, b in zip(nodes[:-1], nodes[1:]):
-        d = G[a][b]["weight"]
+        d = g[a][b]["weight"]
         total += d
         steps.append((f"{a} → {b} ({d:.1f} m)", d))
     return nodes, steps, total
@@ -76,9 +78,17 @@ def make_map(path_nodes):
         m = folium.Map(location=[sum(lats)/len(lats), sum(lons)/len(lons)],
                        zoom_start=17, tiles="OpenStreetMap")
     for n in G.nodes:
+        attrs = G.nodes[n]
+        if n == "_user_location_":
+            folium.CircleMarker(
+                location=[attrs["lat"], attrs["lon"]],
+                radius=8,
+                popup="Your Location",
+                color="green", fill=True, fill_opacity=1,
+            ).add_to(m)
+            continue
         if re.fullmatch(r"c\d{2,3}", n) and (not path_nodes or n not in path_nodes):
             continue
-        attrs = G.nodes[n]
         if "lat" not in attrs or "lon" not in attrs:
             continue
         folium.CircleMarker(
@@ -115,19 +125,78 @@ def make_map(path_nodes):
 app = Flask(__name__)
 app.secret_key = "replace‑me‑with‑something‑secret"
 
-# All routes are now prefixed with /wayfinding
-
 @app.route("/wayfinding/", methods=["GET", "POST"])
 def index():
     global G, nodes_df, labels_sorted
     G, nodes_df = load_graph()
     labels_sorted = sorted(G.nodes)
     if request.method == "POST":
+        user_lat = request.form.get("user_lat")
+        user_lon = request.form.get("user_lon")
+        use_user_loc = user_lat and user_lon and user_lat.strip() != "" and user_lon.strip() != ""
+
         start = request.form.get("start")
-        end   = request.form.get("end")
+        end = request.form.get("end")
+
+        # End location is always required
+        if not end or end.strip() == "":
+            flash("You must select an End location.")
+            return redirect(url_for("index"))
+
+        # User location (GPS) takes priority over 'start'
+        if use_user_loc:
+            try:
+                user_lat = float(user_lat)
+                user_lon = float(user_lon)
+                # Find closest cXX/cXXX node
+                cxx_nodes = [n for n in G.nodes if re.fullmatch(r"c\d{2,3}", n)]
+                if not cxx_nodes:
+                    flash("No cXX/cXXX nodes available for routing.")
+                    return redirect(url_for("index"))
+                def haversine(lat1, lon1, lat2, lon2):
+                    R = 6371000  # meters
+                    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+                    dphi = math.radians(lat2 - lat1)
+                    dlambda = math.radians(lon2 - lon1)
+                    a = math.sin(dphi/2)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(dlambda/2)**2
+                    return 2*R*math.asin(math.sqrt(a))
+                closest = min(
+                    cxx_nodes,
+                    key=lambda n: haversine(user_lat, user_lon, G.nodes[n]['lat'], G.nodes[n]['lon'])
+                )
+                dist = haversine(user_lat, user_lon, G.nodes[closest]['lat'], G.nodes[closest]['lon'])
+                temp_node = "_user_location_"
+                # Add temp node and edge just for this calculation
+                G.add_node(temp_node, lat=user_lat, lon=user_lon, level="ground")
+                G.add_edge(temp_node, closest, weight=dist)
+                # Use temp_node as the start
+                path_nodes, segments, total = shortest_path_via_cxx(temp_node, end)
+                if path_nodes is None:
+                    flash(f"No path found from your location to {end}.")
+                    return redirect(url_for("index"))
+                # Prepend info about user’s location as the start
+                if path_nodes and path_nodes[0] == temp_node and len(path_nodes) > 1:
+                    first_edge_dist = G[temp_node][path_nodes[1]]["weight"]
+                    segments = [(f"Your location → {path_nodes[1]} ({first_edge_dist:.1f} m)", first_edge_dist)] + segments
+                start_label = "Your Location"
+                map_html = make_map(path_nodes)
+                return render_template_string(TEMPLATE_RESULT,
+                                              start=start_label, end=end,
+                                              segments=segments,
+                                              total=total,
+                                              map_html=map_html)
+            except Exception as e:
+                flash(f"Location error: {e}")
+                return redirect(url_for("index"))
+
+        # Only try routing if both start and end are non-empty
+        if not start or start.strip() == "":
+            flash("You must select a Start location or use your location.")
+            return redirect(url_for("index"))
         if start == end:
             flash("Start and End must be different.")
             return redirect(url_for("index"))
+
         path_nodes, segments, total = shortest_path_via_cxx(start, end)
         if path_nodes is None:
             flash(f"No path found between {start} and {end} (must use cXX or cXXX nodes as intermediates).")
@@ -239,6 +308,7 @@ def api_delete_edge():
         return jsonify({"error": "Edge not found"}), 404
 
 # Templates
+
 TEMPLATE_FORM = """
 <!doctype html>
 <html lang="en">
@@ -250,6 +320,8 @@ TEMPLATE_FORM = """
     label{margin-right:.5rem}
     select, option{min-width:280px; font-size:1.5rem;}
     .msg{color:red;margin:.5rem 0}
+    #use-location-btn { margin: 1em 0 0.5em 0; font-size:1.2em;}
+    #location-status { margin-left:1em;}
   </style>
 </head>
 <body>
@@ -260,15 +332,26 @@ TEMPLATE_FORM = """
       {% for m in messages %}<div class="msg">{{m}}</div>{% endfor %}
     {% endif %}
   {% endwith %}
+
   <form method="post">
+    <input type="hidden" name="user_lat" id="user_lat">
+    <input type="hidden" name="user_lon" id="user_lon">
     <p>
       <label for="start">Start:</label>
       <select name="start" id="start">
+        <option value="">-- Select --</option>
         {% for loc in locations %}
           <option value="{{loc}}">{{loc}}</option>
         {% endfor %}
       </select>
     </p>
+
+    <!-- Use my location button and status -->
+    <div>
+      <button type="button" id="use-location-btn">Or use my location</button>
+      <span id="location-status"></span>
+    </div>
+
     <p>
       <label for="end">End:</label>
       <select name="end" id="end">
@@ -279,8 +362,36 @@ TEMPLATE_FORM = """
     </p>
     <button type="submit">Find route</button>
   </form>
-  <P></P><a href="{{ url_for('add_node') }}">Or add new node or edges (This is an admin feature: ** Use with care! **)</
-a>
+  <p></p>
+  <a href="{{ url_for('add_node') }}">Or add new node or edges (This is an admin feature: ** Use with care! **)</a>
+  <script>
+  document.getElementById('use-location-btn').onclick = function() {
+    var status = document.getElementById('location-status');
+    status.textContent = "Requesting location…";
+    if (!navigator.geolocation) {
+      status.textContent = "Geolocation not supported.";
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      var lat = pos.coords.latitude;
+      var lon = pos.coords.longitude;
+      document.getElementById('user_lat').value = lat;
+      document.getElementById('user_lon').value = lon;
+      // Show all fields as they will be used in the node:
+      status.innerHTML = (
+        '<b>Location set:</b><br>' +
+        '<span style="color:green">' +
+        'label: <code>_user_location_</code><br>' +
+        'lat: <code>' + lat.toFixed(6) + '</code><br>' +
+        'lon: <code>' + lon.toFixed(6) + '</code><br>' +
+        'level: <code>ground</code></span>'
+      );
+      document.getElementById('start').value = '';
+    }, function(err) {
+      status.textContent = "Unable to get location.";
+    }, {enableHighAccuracy:true});
+  };
+  </script>
 </body>
 </html>
 """
