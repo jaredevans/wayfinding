@@ -315,28 +315,112 @@ TEMPLATE_FORM = """
 <head>
   <meta charset="utf-8">
   <title>Gallaudet Way‑finding</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body{font-family:Arial,Helvetica,sans-serif;margin:2rem}
-    label{margin-right:.5rem}
-    select, option{min-width:280px; font-size:1.5rem;}
-    .msg{color:red;margin:.5rem 0}
-    #use-location-btn { margin: 1em 0 0.5em 0; font-size:1.2em;}
-    #location-status { margin-left:1em;}
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f7f9fc;
+    }
+    .container {
+      max-width: 450px;
+      margin: 0 auto;
+      padding: 1em;
+      background: #fff;
+      box-shadow: 0 2px 12px #0001;
+      border-radius: 1em;
+      margin-top: 2em;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: .7em;
+      text-align: center;
+    }
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: .2em;
+      margin-top: 1.2em;
+    }
+    select, option {
+      width: 100%;
+      min-width: 0;
+      font-size: 1.2em;
+      padding: .7em;
+      margin-top: .2em;
+      margin-bottom: 1em;
+      border: 1px solid #bbb;
+      border-radius: .5em;
+      background: #f7f9fc;
+      box-sizing: border-box;
+    }
+    #use-location-btn, #find-route-btn {
+      width: 100%;
+      font-size: 1.2em;
+      padding: .7em;
+      background: #0077cc;
+      color: #fff;
+      border: none;
+      border-radius: .5em;
+      margin-top: .2em;
+      margin-bottom: 1em;
+      cursor: pointer;
+      transition: background .18s;
+    }
+    #use-location-btn:active,
+    #use-location-btn:focus,
+    #find-route-btn:active,
+    #find-route-btn:focus {
+      background: #005fa3;
+    }
+    .msg {
+      color: #c00;
+      margin: .7em 0;
+      text-align: center;
+      font-size: 1.08em;
+    }
+    #location-status {
+      font-size: 1em;
+      display: block;
+      margin-bottom: .7em;
+      text-align: center;
+    }
+    .admin-link {
+      display: block;
+      text-align: center;
+      margin-top: 1.7em;
+      font-size: 1em;
+    }
+    @media (max-width: 600px) {
+      .container {
+        max-width: 100vw;
+        box-shadow: none;
+        border-radius: 0;
+        margin-top: 0;
+        padding: 0.8em;
+      }
+      h1 { font-size: 1.3em; }
+      select, option, #use-location-btn, #find-route-btn { font-size: 1em; }
+    }
   </style>
 </head>
 <body>
-  <h1>Shortest walking route on campus</h1>
+  <div class="container">
+    <h1>Shortest walking route on campus</h1>
 
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      {% for m in messages %}<div class="msg">{{m}}</div>{% endfor %}
-    {% endif %}
-  {% endwith %}
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for m in messages %}
+          <div class="msg">{{m}}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
-  <form method="post">
-    <input type="hidden" name="user_lat" id="user_lat">
-    <input type="hidden" name="user_lon" id="user_lon">
-    <p>
+    <form method="post">
+      <input type="hidden" name="user_lat" id="user_lat">
+      <input type="hidden" name="user_lon" id="user_lon">
+
       <label for="start">Start:</label>
       <select name="start" id="start">
         <option value="">-- Select --</option>
@@ -344,53 +428,52 @@ TEMPLATE_FORM = """
           <option value="{{loc}}">{{loc}}</option>
         {% endfor %}
       </select>
-    </p>
 
-    <!-- Use my location button and status -->
-    <div>
       <button type="button" id="use-location-btn">Or use my location</button>
       <span id="location-status"></span>
-    </div>
+      <div style="margin-bottom: 1em; color:#333; font-size:.98em;">
+        GPS locations are not stored and only used to build the route.
+      </div>
 
-    <p>
       <label for="end">End:</label>
       <select name="end" id="end">
         {% for loc in locations %}
           <option value="{{loc}}">{{loc}}</option>
         {% endfor %}
       </select>
-    </p>
-    <button type="submit">Find route</button>
-  </form>
-  <p></p>
-  <a href="{{ url_for('add_node') }}">Or add new node or edges (This is an admin feature: ** Use with care! **)</a>
+
+      <button type="submit" id="find-route-btn">Find route</button>
+    </form>
+
+    <a class="admin-link" href="{{ url_for('add_node') }}">
+      Or add new node or edges (admin feature)
+    </a>
+  </div>
   <script>
-  document.getElementById('use-location-btn').onclick = function() {
-    var status = document.getElementById('location-status');
-    status.textContent = "Requesting location…";
-    if (!navigator.geolocation) {
-      status.textContent = "Geolocation not supported.";
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(function(pos) {
-      var lat = pos.coords.latitude;
-      var lon = pos.coords.longitude;
-      document.getElementById('user_lat').value = lat;
-      document.getElementById('user_lon').value = lon;
-      // Show all fields as they will be used in the node:
-      status.innerHTML = (
-        '<b>Location set:</b><br>' +
-        '<span style="color:green">' +
-        'label: <code>_user_location_</code><br>' +
-        'lat: <code>' + lat.toFixed(6) + '</code><br>' +
-        'lon: <code>' + lon.toFixed(6) + '</code><br>' +
-        'level: <code>ground</code></span>'
-      );
-      document.getElementById('start').value = '';
-    }, function(err) {
-      status.textContent = "Unable to get location.";
-    }, {enableHighAccuracy:true});
-  };
+    document.getElementById('use-location-btn').onclick = function() {
+      var status = document.getElementById('location-status');
+      status.textContent = "Requesting location…";
+      if (!navigator.geolocation) {
+        status.textContent = "Geolocation not supported.";
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        var lat = pos.coords.latitude;
+        var lon = pos.coords.longitude;
+        document.getElementById('user_lat').value = lat;
+        document.getElementById('user_lon').value = lon;
+        status.innerHTML =
+          '<b>Location set:</b><br>' +
+          '<span style="color:green">' +
+          'label: <code>_user_location_</code><br>' +
+          'lat: <code>' + lat.toFixed(6) + '</code><br>' +
+          'lon: <code>' + lon.toFixed(6) + '</code><br>' +
+          'level: <code>ground</code></span>';
+        document.getElementById('start').value = '';
+      }, function(err) {
+        status.textContent = "Unable to get location.";
+      }, {enableHighAccuracy:true});
+    };
   </script>
 </body>
 </html>
@@ -431,10 +514,24 @@ TEMPLATE_ADD_NODE = """
   <meta charset="utf-8">
   <title>Add Node by Map Click</title>
   <style>
-    body{font-family:Arial,Helvetica,sans-serif;margin:2rem}
-    #map{width:800px;height:500px;margin-top:1rem}
-    .popup{background:#fff;padding:0.5em;border-radius:0.4em}
-    #msg{margin-top:1em;}
+    body {font-family:Arial,Helvetica,sans-serif;margin:2rem;}
+    #map {
+      width: 100%;
+      max-width: 1000px;
+      height: 600px;
+      margin-top: 1rem;
+    }
+    .popup {background:#fff;padding:0.5em;border-radius:0.4em;}
+    #msg {margin-top:1em;}
+    @media (max-width: 700px) {
+      #map {
+        width: 100vw;
+        height: 60vw;
+        min-height: 300px;
+        max-width: 100vw;
+      }
+      body {margin:0; padding:0.7em;}
+    }
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 </head>
@@ -445,7 +542,7 @@ TEMPLATE_ADD_NODE = """
   <div id="msg"></div>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-  var map = L.map('map').setView([{{nodes[0]["lat"]}}, {{nodes[0]["lon"]}}], 17);
+  var map = L.map('map').setView([{{nodes[0]["lat"]}}, {{nodes[0]["lon"]}}], 19);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
