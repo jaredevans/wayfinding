@@ -30,7 +30,7 @@ Sample route on campus:
 
 Mobile version, with GPS position set:
 
-<img src="https://i.imgur.com/IZEOTiy.jpeg" width=500 height=800>
+<img src="https://i.imgur.com/VJ1Rvdf.jpeg" width=500 height=800>
 
 Mobile version, route from user's GPS position, marked with $${\color{green}green \space color}$$:
 
