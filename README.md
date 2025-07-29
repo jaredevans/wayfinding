@@ -32,7 +32,7 @@ Mobile version, with GPS position set:
 
 <img src="https://i.imgur.com/IZEOTiy.jpeg" width=500 height=800>
 
-Mobile version, route from user's GPS position, marked with color $${\color{green}green }$$:
+Mobile version, route from user's GPS position, marked with $${\color{green}green \space color}$$:
 
 <img src="https://i.imgur.com/sBBe2DZ.jpeg" width=500 height=800>
 
