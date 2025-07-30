@@ -1,4 +1,3 @@
-# cat activate_venv.sh
 #!/bin/bash
 
 # AlERT: source this script, don't run it directly.
