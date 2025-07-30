@@ -5,7 +5,7 @@
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   echo "This script must be sourced, not run directly."
-  echo "source activate_venv.sh"
+  echo "source source_activate_venv.sh"
   exit 1
 fi
 
