@@ -66,7 +66,6 @@ c021,c020,25.6
 c020,c018,37.0
 c017,c018,16.7
 c036,Kellogg Conference Hotel,45.5
-Peet Hall,c036,37.8
 c020,c038,28.9
 c038,Peet Hall,15.3
 c038,c039,15.0
@@ -200,3 +199,9 @@ c080,c099,82.7
 c099,Softball Complex,25.2
 Hoy Field,c099,36.4
 c065,Rope Course,35.0
+c100,Peet Hall,8.1
+c100,c036,31.2
+c046,c074,27.0
+Entrance MSSD,c102,32.6
+c102,c101,41.4
+c101,c090,50.3
