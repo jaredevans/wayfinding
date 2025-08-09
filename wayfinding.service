@@ -7,6 +7,7 @@ User=www-data
 Group=www-data
 WorkingDirectory=/var/www/wayfinding
 Environment="PATH=/var/www/wayfinding/.venv/bin"
+EnvironmentFile=/var/www/wayfinding/wayfinding.env
 ExecStart=/var/www/wayfinding/.venv/bin/gunicorn wsgi:app --bind 127.0.0.1:8000 --workers 1 --timeout 120
 
 Restart=always
@@ -16,3 +17,4 @@ TimeoutStopSec=60
 
 [Install]
 WantedBy=multi-user.target
+
