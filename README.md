@@ -1,6 +1,6 @@
 # Gallaudet Campus Wayfinding (Flask)
 
-A web-based wayfinding application for the Gallaudet University campus.  
+A web-based wayfinding application for the University campus.  
 It calculates the shortest walking route between two locations using a constrained graph (connector nodes), displays it on an interactive map, and includes an admin UI for managing map data.
 
 Routing is computed with **NetworkX** and rendered with **Folium/Leaflet**.  
