@@ -158,6 +158,6 @@ ExecStart=/var/www/wayfinding/.venv/bin/gunicorn wsgi:app --bind 127.0.0.1:8000 
 
 **Admin Add Node/Edge:**
 
-<img src="https://i.imgur.com/IdAFhrV.png" width=500 height=800>
+<img src="https://i.imgur.com/IdAFhrV.png" width=700 height=900>
 
 
