@@ -695,7 +695,7 @@ TEMPLATE_FORM = """
       <button type="button" id="use-location-btn">Or use my location</button>
       <span id="location-status"></span>
       <div style="margin-bottom: 1em; color:#333; font-size:.98em;">
-        GPS locations are not stored and only used to build the route.
+        Note: GPS locations are not stored in the app. They are used only to build the route or show your location on the map.
       </div>
 
       <label for="end">End:</label>
@@ -754,6 +754,10 @@ TEMPLATE_RESULT = """
     li{margin-bottom:.3rem}
     #map{margin-top:1rem}
     a{margin-top:1rem;display:inline-block}
+    .controls{margin:.5rem 0 1rem; display:flex; gap:.5rem; align-items:center; flex-wrap:wrap}
+    .btn{background:#0077cc;color:#fff;border:none;border-radius:.5em;padding:.5rem .8rem;cursor:pointer}
+    .btn:focus,.btn:active{background:#005fa3}
+    .muted{color:#666;font-size:.9rem}
   </style>
 </head>
 <body>
@@ -764,8 +768,156 @@ TEMPLATE_RESULT = """
       <li>{{line}}</li>
     {% endfor %}
   </ul>
+
+  <div class="controls">
+    <button id="startTrack" class="btn">▶ Start tracking</button>
+    <button id="stopTrack" class="btn" disabled>■ Stop</button>
+    <span id="status" class="muted"></span>
+  </div>
+
   <div id="map">{{map_html|safe}}</div>
   <a href="{{ url_for('index') }}">⇠ New search</a>
+
+  <script>
+    function findFoliumIframe(){
+      const container = document.getElementById('map');
+      return container ? container.querySelector('iframe') : null;
+    }
+
+    function getIframeLeafletContext(){
+      const iframe = findFoliumIframe();
+      if (!iframe) return null;
+      const iw = iframe.contentWindow;
+      if (!iw) return null;
+      const L = iw.L;
+      if (!L) return null;
+      for (const k of Object.keys(iw)) {
+        try {
+          const v = iw[k];
+          if (k.startsWith('map_') && v && typeof v.setView === 'function' && v instanceof L.Map) {
+            return { map: v, L, win: iw, iframe };
+          }
+        } catch(e){}
+      }
+      return null;
+    }
+
+    async function resolveIframeLeaflet(maxTries=30, intervalMs=150){
+      let tries = 0;
+      return new Promise((resolve)=>{
+        const attempt = ()=>{
+          const ctx = getIframeLeafletContext();
+          if (ctx) return resolve(ctx);
+          tries++;
+          if (tries >= maxTries) return resolve(null);
+          setTimeout(attempt, intervalMs);
+        };
+        attempt();
+      });
+    }
+
+    const startBtn = document.getElementById('startTrack');
+    const stopBtn  = document.getElementById('stopTrack');
+    const statusEl = document.getElementById('status');
+
+    let watchId = null;
+    let ctx = null;
+    let youMarker = null;
+    let accuracyCircle = null;
+
+    function setStatus(msg){ statusEl.textContent = msg; }
+
+    function ensureHttpsForGeolocation(){
+      const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+      const isHttps = location.protocol === 'https:';
+      return isHttps || isLocalhost;
+    }
+
+    function onPosSuccess(pos){
+      if (!ctx) return;
+      const { map, L } = ctx;
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      const acc = pos.coords.accuracy || 0;
+      const latlng = [lat, lon];
+
+      if (!youMarker) {
+        youMarker = L.circleMarker(latlng, { radius:7, color:'green', fill:true, fillOpacity:1 })
+          .addTo(map).bindPopup('You are here');
+      } else {
+        youMarker.setLatLng(latlng);
+      }
+
+      if (!accuracyCircle) {
+        accuracyCircle = L.circle(latlng, { radius: acc, opacity:0.3, fillOpacity:0.1 }).addTo(map);
+      } else {
+        accuracyCircle.setLatLng(latlng);
+        accuracyCircle.setRadius(acc);
+      }
+
+      setStatus(`GPS: ${lat.toFixed(5)}, ${lon.toFixed(5)} (±${Math.round(acc)} m)`);
+    }
+
+    function onPosError(err){
+      setStatus('Location error: ' + (err && err.message ? err.message : err));
+    }
+
+    async function startTracking(){
+      setStatus('Preparing map…');
+
+      if (!ensureHttpsForGeolocation()){
+        setStatus('Geolocation requires HTTPS (or localhost).');
+        return;
+      }
+
+      ctx = ctx || await resolveIframeLeaflet();
+      if (!ctx || !ctx.map || !ctx.L) {
+        setStatus('Map not ready. Try again in a moment.');
+        return;
+      }
+
+      if (!navigator.geolocation) {
+        setStatus('Geolocation not supported by this browser.');
+        return;
+      }
+
+      watchId = navigator.geolocation.watchPosition(onPosSuccess, onPosError, {
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+        timeout: 10000
+      });
+
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      setStatus('Starting GPS…');
+    }
+
+    function stopTracking(){
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+      if (ctx && youMarker) { ctx.map.removeLayer(youMarker); youMarker = null; }
+      if (ctx && accuracyCircle) { ctx.map.removeLayer(accuracyCircle); accuracyCircle = null; }
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      setStatus('Tracking stopped.');
+    }
+
+    startBtn.addEventListener('click', startTracking);
+    stopBtn.addEventListener('click', stopTracking);
+
+    window.addEventListener('load', async ()=>{
+      const iframe = findFoliumIframe();
+      if (iframe) {
+        iframe.addEventListener('load', () => { ctx = null; });
+      }
+      const maybe = await resolveIframeLeaflet(10, 200);
+      if (maybe) ctx = maybe;
+    });
+
+    try { if (document.title.includes('Your Location')) startTracking(); } catch(e){}
+  </script>
 </body>
 </html>
 """
