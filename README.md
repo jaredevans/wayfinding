@@ -8,7 +8,7 @@ Node and edge data are stored in `nodes.csv` and `edges.csv` with **safe file-lo
 
 ---
 
-## What's New in This Version
+## What's implemented in the app:
 
 - **Server-side authoritative edge distances**  
   Distances for new edges are computed on the **server** from node coordinates (client-sent distances are ignored).
