@@ -28,8 +28,6 @@ Node and edge data are stored in `nodes.csv` and `edges.csv` with **safe file-lo
   Users can start/stop real-time GPS tracking while viewing a route.
 - **Edge Deletion from Map**  
   Admins can click an edge to highlight and delete it directly.
-- **JSON Path API**  
-  `/wayfinding/api/path?start=...&end=...` returns structured route data for automation/mobile use.
 
 ---
 
